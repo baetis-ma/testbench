@@ -97,35 +97,66 @@
 ```
 # 9. Logic Analyzer Software 
 #### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
+
 #### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 #### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ```
-set terminal wxt noraise background rgb 'dark-olivegreen'
-set autoscale
-set title "Oscilliscope"
-set xlabel "time (ms)"
-set grid ytics lt 0 lw 0.5 lc rgb "yellow"
-set grid xtics lt 0 lw 0.5 lc rgb "yellow"
-set yrange[-0.5:8]
-set xrange[0:1.000000]
-unset label 1
-set label 1 "*" font ",20" at 0.100000,-.75 center tc rgb 'red'
-set xlabel "time (ms) - 2us/ samp 500 samples/channel"
-set style line 1 lw 1.5 pt 7 ps .5 lc rgb 'salmon'
-set style line 2 lw 1.5 pt 7 ps .5 lc rgb 'sandybrown'
-array xa[4100]
-array y1a[4100]
-array y2a[4100]
-xa[1]  =  0.001; y1a[1] =  0.000; y2a[1] =  4.000
-xa[2]  =  0.003; y1a[2] =  0.000; y2a[2] =  4.000
-xa[3]  =  0.005; y1a[3] =  0.000; y2a[3] =  4.000
-xa[4]  =  0.007; y1a[4] =  0.000; y2a[4] =  4.000
-xa[5]  =  0.009; y1a[5] =  0.000; y2a[5] =  4.000
-xa[6]  =  0.011; y1a[6] =  0.000; y2a[6] =  4.000
-xa[7]  =  0.013; y1a[7] =  0.000; y2a[7] =  4.000
-xa[8]  =  0.015; y1a[8] =  0.000; y2a[8] =  4.000
-….
-Continues to last sample in trace
+int main(int argc, char **argv) {
+   char buff[64];
+   int aa =0, a;
+   time_t oldMTime, newMTime;
+   struct stat file_stat;
+   struct timeval timeout;
+   timeout.tv_sec = 0; timeout.tv_usec = 0;
+   fd_set rfds;
+   FD_ZERO(&rfds);
+
+   //setup serial port
+   if(argc == 1) fd = serial_open("/dev/ttyUSB0", B500000);
+   if(argc == 2) {sscanf(argv[1], "%s", buff); fd = serial_open(buff, B500000); }
+   if (fd < 0) {fprintf(stderr, "cant find port %s\n", buff); exit(0); }
+
+   //initialize
+   rerundef();
+
+   while(1) {
+      //check if timestamp on ./definitions has changed
+      stat("./definitions", &file_stat);
+      newMTime = file_stat.st_mtime;
+      if (newMTime > oldMTime) { oldMTime = newMTime; rerundef(); }
+
+      aa=0; FD_SET(STDIN_FILENO, &rfds);      //read stdin from terminal if present
+      if (select(1, &rfds, NULL, NULL, &timeout)) {
+         while(1){ read(STDIN_FILENO, buff + aa++, 1); if(buff[aa-1] == '\n') break; }
+         if(sscanf(buff, "trigoff %d", &offset)==1) {buff[0]='i';} else
+         if(sscanf(buff, "samples %d", &samples)==1) {buff[0]='i';}
+         menu(buff[0]);
+      }
+      readpacket();                           //read packet
+      mkgnuplotprog();                        //make gnuplot program
+   }
+}
+```
+```
+#definition file for logic.c analyzer
+#leading sharp is comment
+#column 1 is name you want on plot
+#column 2 is lsb of  packet data to plot
+#column 3 is width of vector assigned to name
+#column 4 is trigger value 
+#   - neg value will not contribute to trigger
+#   - each >= 0 value will contribute to trig word
+#   - trig generated on first occurance of trig word
+
+
+#str1u     13   1    -1
+#cnt1u      4   8    45
+pwm3        3   1    -1
+pwm2        2   1    -1
+pwm1        1   1    -1
+pwm0        0   1    -1
+pwm         1   3     4
+
 ```
 # 10. Logic Analyzer Demonstration
 #### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
