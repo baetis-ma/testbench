@@ -48,7 +48,7 @@
 ```
 # 5. Oscilloscope Software
 #### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
-```C
+```gnuplot
 #!/usr/bin/gnuplot -p
 set terminal wxt noraise background rgb 'dark-olivegreen'
 set autoscale
