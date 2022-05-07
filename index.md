@@ -25,7 +25,6 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
 ### Serial Packet Description                            
 | first header | second header | thiirs header |
-| ------------ | ------------- | ------------- |
 | 0x07         | 1234          | 5678          |
 | | 123 | abcd          |
 
