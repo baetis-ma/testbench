@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
    }
 }
 ```
-```
+```perl
 #definition file for logic.c analyzer
 #leading sharp is comment
 #column 1 is name you want on plot
