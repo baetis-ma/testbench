@@ -27,7 +27,7 @@ The Frame Packet transmitted from the oscilloscope board to the computer has the
 | first header | second header | thiirs header |
 | ------------ | ------------- | ------------- |
 | 0x07         | 1234          | 5678          |
-| |  | abcd          |
+| | 123 | abcd          |
 
 # 5. Oscilloscope Software
 ### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
