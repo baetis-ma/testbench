@@ -1,6 +1,13 @@
 # Abstract
 ### A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second, between four channels, about 2 dozen digital signals are able to be sampled at a 200MHz sampling rate. The FPGA collects and buffers analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates up to six times per second are consistand on my 10yo machine. Both the analog and digital have a number of triggering options available. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated.
 ![picture](testbenchboard.jpg)
+```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
 # 1. Theory of Operation
 #### The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes. This signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (powers of two times 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay. When the ADC is halted the buffer has a full trace (#samples x samplerate) of valid ADC data for each active channel. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission. 
 #### The Logic Analyzer function is resident in the FPGA and the user can switch between the two modes at any time. The same user programmable update_strobe signal initiates the acquisition of logic samples into on board buffer memory. The samples are collected whenever any of the defined logic levels change state. This sequence ends when the user selected number of samples offset by any trigger delay. At this point the buffer has a full set of samples collected. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission.
