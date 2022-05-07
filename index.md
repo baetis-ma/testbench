@@ -69,7 +69,36 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 #### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 # 8. Logic Analyzer Packet and Payload Format
 ## The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
-#### Serial Packet Description                            
+#### Serial Packet Description   
+```
+|------------------|---------------|------------------------------------------------ |
+| Byte Order       |       Section |   Description                                   |
+|------------------|---------------|------------------------------------------------ |
+|       0x00-0x08  | Header        | the string ‘logical’                            |
+|       0x09-0x0a  |               | numsamples                                      |
+|       0x0b-0x0c  |               | samplerate        0x0001 = 1usec/sample, etc    |
+|       0x0d-0x0e  |               | triggeraddress    which sample is trigger time  | 
+|       0x0f-0x1b  |               | All \\\\\0xff                                   |
+|       0x1c-0x1f  |               | 0x0000ffff                                      |
+|------------------|---------------|-------------------------------------------------|
+|       0x20-0x20+ | Data Payload  | Data payload – see structure below              |
+| 2 x numsamples   |               |                                                 |
+| numberchannels   |               |                                                 |
+|------------------|---------------|-------------------------------------------------|
+```
+### Structure of Payload
+```
+|---|------|------------|------------|------------|------------|------------|------------|------------|
+|MSB|    1 |   time(27) |   time(26) |   time(25) |   time(24) |   time(23) |   time(22) |   time(21) |
+|   |    0 |   time(20) |   time(19) |   time(18) |   time(17) |   time(16) |   time(15) |   time(14) |
+|   |    0 |   time(13) |   time(12) |   time(11) |   time(10) |    time(9) |    time(8) |    time(7) |
+|   |    0 |    time(6) |    time(5) |    time(4) |    time(3) |    time(2) |    time(1) |    time(0) |
+|   |    0 | vector(27) | vector(26) | vector(25) | vector(24) | vector(23) | vector(22) | vector(21) |
+|   |    0 | vector(20) | vector(19) | vector(18) | vector(17) | vector(17) | vector(16) | vector(15) |
+|   |    0 | vector(13) | vector(12) | vector(11) | vector(10) |  vector(9) |  vector(8) |  vector(7) |
+|LSB|    0 |  vector(6) |  vector(5) |  vector(4) |  vector(3) |  vector(2) |  vector(1) |  vector(0) |
+|---|------|------------|------------|------------|------------|------------|------------|------------|
+```
 # 9. Logic Analyzer Software 
 #### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
 #### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
