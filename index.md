@@ -46,12 +46,111 @@
 |---|------|----------|----------|----------|----------|----------|----------|----------|
 ```
 # 5. Oscilloscope Software
-#### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
-#### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+#### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
+```C
+#!/usr/bin/gnuplot -p
+set terminal wxt noraise background rgb 'dark-olivegreen'
+set autoscale
+set title "Oscilliscope"
+set xlabel "time (ms)"
+set grid ytics lt 0 lw 0.5 lc rgb "yellow"
+set grid xtics lt 0 lw 0.5 lc rgb "yellow"
+set yrange[-0.5:8]
+set xrange[0:1.000000]
+unset label 1
+set label 1 "*" font ",20" at 0.100000,-.75 center tc rgb 'red'
+set xlabel "time (ms) - 2us/ samp 500 samples/channel"
+set style line 1 lw 1.5 pt 7 ps .5 lc rgb 'salmon'
+set style line 2 lw 1.5 pt 7 ps .5 lc rgb 'sandybrown'
+set style line 3 lw 1.5 pt 7 ps .5 lc rgb 'light-red'
+set style line 4 lw 1.5 pt 7 ps .5 lc rgb 'yellow'
+array xa[8100]
+array y1a[8100]
+array y2a[8100]
+array y3a[8100]
+array y4a[8100]
+xa[8]  =  0.016;  y1a[8] =  0.000; y2a[8] =  4.000;
+xa[9]  =  0.018;  y1a[9] =  0.000; y2a[9] =  4.000;
+xa[10]  =  0.020;  y1a[10] =  0.000; y2a[10] =  4.000;
+xa[11]  =  0.022;  y1a[11] =  0.000; y2a[11] =  4.000;
+xa[12]  =  0.024;  y1a[12] =  0.000; y2a[12] =  4.000;
+...
+xa[498]  =  0.996;  y1a[498] =  0.000; y2a[498] =  4.000;
+xa[499]  =  0.998;  y1a[499] =  0.000; y2a[499] =  4.000;
+xa[500]  =  1.000;  y1a[500] =  0.000; y2a[500] =  4.000;
+plot xa u 2:(y1a[$1]) title 'ch0' w linespoints ls 1, \
+   xa u 2:(y2a[$1]) title 'ch1' w linespoints ls 2   
+set terminal png size 1200, 400 background rgb 'dark-olivegreen'\n");
+set output 'output.png'
+replot
+```
+#### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and  to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+```C
+//sync and read packet
+int readpacket()
+{
+   unsigned char header[16];
+   int ret, syncpat = 0;
+   unsigned char syncword[8] = "1234567";
+   int mask;
+   unsigned char packetdata[8000];
+   int num, tot;
+
+   while(syncpat!=1){
+      syncword[0] = syncword[1]; syncword[1] = syncword[2];
+      syncword[2] = syncword[3]; syncword[3] = syncword[4];
+      syncword[4] = syncword[5];
+      read(fd, syncword + 5, 1);
+      syncword[6] = 0;
+      if((ret = strcmp("oscope", syncword)) == 0) syncpat = 1;
+   }
+   
+   //chomps whole packet after syncword
+   tot = 0;
+   while(tot < length+11) {
+      tot = tot + read(fd, packetdata + tot, length+11-tot);
+   }
+
+   //decypher rest of header
+   trigger  = packetdata[0]/128;
+   trig_ch  = (packetdata[0]%128)/32;
+   trig_pol = (packetdata[0]%32)/16;
+   chcnt    = (packetdata[0]%8);
+   length   = 256 * packetdata[1] + packetdata[2];
+   timeus   = 256 * packetdata[3] + packetdata[4];
+   trigoff  = 256 * packetdata[5] + packetdata[6];
+   
+   //read payload part of packet into volt array
+   vecnum = 11;   //offset from residual header
+   while(vecnum < length/2){
+      volt[vecnum] = 256 * packetdata[2*vecnum+1] + packetdata[2*vecnum];
+      vecnum++;
+   }
+}
+```
 ### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 
 # 6. Oscilloscope Demonstration
-#### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
+#### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state.
+```
+timebase <time in us>
+samples <number samples>
+channels <number channeles>
+trigoff <fraction of full scale (can be +/-)>
+trigchan <trigger channel>
+trigger <trigger> <polarity>
+x - timebase
+y - channel volt offsets toggle - seperate by 4v
+c - number of channels
+S - number of samples
+t - toggle trigger off/+edge/-edge
+C - toggle trigger channel
+p - pwm rate and percent
+u - update rate
+o - trigger offset in samples
+i - sync fpga to gnuplot
+h - this message
+```
 #### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
 #### In an idle terminal window type ‘echo hi > devttyUSB1’, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘hi\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
 #### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
