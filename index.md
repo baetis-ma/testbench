@@ -129,7 +129,7 @@ Continues to last sample in trace
 ```
 # 10. Logic Analyzer Demonstration
 #### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
-![Logic Analyzer trace](/assets/images/output.png)
+![Logic Analyzer trace](./output.png)
 #### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
 #### In an idle terminal window type ‘echo hi > devttyUSB1’, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘hi\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
 #### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
