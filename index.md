@@ -58,7 +58,7 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 #### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
 #### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
 #### In an idle terminal window type ‘echo hi > devttyUSB1’, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘hi\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
-### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
+#### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
 
 #### chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
 #### Having the scope really helped in the debug of this interference. 
@@ -68,8 +68,8 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 #### When a trigger is specified the ADC acquisition cycle will continue so that a full number of display samples are stored after triggering. The trigger currently implemented activates when the incoming measurements on the selected channel over the last four cycles are <50%fs, <50%fs, >=50%fs and >=50%fs (or the opposite for negative edge trigger selected), the trigger can be chosen to operate on each of the active channels positive or negative edge. Data is stored so that a full compliment of samples after the trigger are collected. The trigger offset can be greater than the number of samples (or even negative) within the constraints of the 16K sample buffer.
 #### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 # 8. Logic Analyzer Packet and Payload Format
-## The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
-#### Serial Packet Description   
+#### The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
+#### Logic Analyzer Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
 | Byte Order       |       Section |   Description                                   |
@@ -81,23 +81,23 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 |       0x0f-0x1b  |               | All \\\\\0xff                                   |
 |       0x1c-0x1f  |               | 0x0000ffff                                      |
 |------------------|---------------|-------------------------------------------------|
-|       0x20-0x20+ | Data Payload  | Data payload – see structure below              |
-| 2 x numsamples   |               |                                                 |
-| numberchannels   |               |                                                 |
+|     0x20-0x20+   | Data Payload  | Data payload – see structure below              |
+|      numsamples  |               |                                                 |
 |------------------|---------------|-------------------------------------------------|
 ```
-### Structure of Payload
+#### Structure of Logic Analyzer Payload
 ```
-|---|------|------------|------------|------------|------------|------------|------------|------------|
-|MSB|    1 |   time(27) |   time(26) |   time(25) |   time(24) |   time(23) |   time(22) |   time(21) |
-|   |    0 |   time(20) |   time(19) |   time(18) |   time(17) |   time(16) |   time(15) |   time(14) |
-|   |    0 |   time(13) |   time(12) |   time(11) |   time(10) |    time(9) |    time(8) |    time(7) |
-|   |    0 |    time(6) |    time(5) |    time(4) |    time(3) |    time(2) |    time(1) |    time(0) |
-|   |    0 | vector(27) | vector(26) | vector(25) | vector(24) | vector(23) | vector(22) | vector(21) |
-|   |    0 | vector(20) | vector(19) | vector(18) | vector(17) | vector(17) | vector(16) | vector(15) |
-|   |    0 | vector(13) | vector(12) | vector(11) | vector(10) |  vector(9) |  vector(8) |  vector(7) |
-|LSB|    0 |  vector(6) |  vector(5) |  vector(4) |  vector(3) |  vector(2) |  vector(1) |  vector(0) |
-|---|------|------------|------------|------------|------------|------------|------------|------------|
+|byte7|    byte6   |    byte5   |    byte4   |     byte3  |     byte2  |     byte1  |     byte0  |    
+|-----|------------|------------|------------|------------|------------|------------|------------|
+|   1 |   time(27) |   time(26) |   time(25) |   time(24) |   time(23) |   time(22) |   time(21) |
+|   0 |   time(20) |   time(19) |   time(18) |   time(17) |   time(16) |   time(15) |   time(14) |
+|   0 |   time(13) |   time(12) |   time(11) |   time(10) |    time(9) |    time(8) |    time(7) |
+|   0 |    time(6) |    time(5) |    time(4) |    time(3) |    time(2) |    time(1) |    time(0) |
+|   0 | vector(27) | vector(26) | vector(25) | vector(24) | vector(23) | vector(22) | vector(21) |
+|   0 | vector(20) | vector(19) | vector(18) | vector(17) | vector(17) | vector(16) | vector(15) |
+|   0 | vector(13) | vector(12) | vector(11) | vector(10) |  vector(9) |  vector(8) |  vector(7) |
+|   0 |  vector(6) |  vector(5) |  vector(4) |  vector(3) |  vector(2) |  vector(1) |  vector(0) |
+|-----|------------|------------|------------|------------|------------|------------|------------|
 ```
 # 9. Logic Analyzer Software 
 #### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
@@ -145,10 +145,13 @@ Continues to last sample in trace
 git clone -r https://github.com/baetis-ma/max1000-oscope.git
 As a short cut to get the quartus gui running -
 ~/intelFPGA_lite/21.1/quartus/bin/quartus --64bit top.qpf 
-Starting a project and getting things going with the gui has its uses, but it is also possible to edit files and program the device directly with your own IDE with a few simple commands.
- ~/intelFPGA_lite/21.1/nios2eds/nios2_command_shell.sh                                           (set environment)
-quartus_sh --flow compile oscope                                                                               (compiles project)
-quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"    (program fpga sram)
+```
+#### Starting a project and getting things going with the gui has its uses, but it is also possible to edit files and program the device directly with your own IDE with a few simple commands.
+ ```
+ ~/intelFPGA_lite/21.1/nios2eds/nios2_command_shell.sh                                (set environment)
+quartus_sh --flow compile oscope                                                      (compiles project)
+quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.sof"  (program fpga sram)
+quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
 #### The file command in the base directory has several other useful commands.
 ## 11.2 Compiling oscope and logic programs
