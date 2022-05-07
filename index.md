@@ -2,11 +2,11 @@
 
 You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
 
-Abstract
-A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second, between four channels, also about 2 dozen digital signals are able to be sampled at a 200MHz sampling rate. The FPGA collects and buffers analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates of up to six times per second can be supported. For both the analog and digital sections a nnumber of triggering options are supported. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated.
-1. Theory of Operation
-The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes. This signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (powers of two times 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay. When the ADC is halted the buffer has a full trace (#samples x samplerate) of valid ADC data for each active channel. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission. 
-The Logic Analyzer function is resident in the FPGA and the user can switch between the two modes at any time. The same user programmable update_strobe signal initiates the acquisition of logic samples into on board buffer memory. The samples are collected whenever any of the defined logic levels change state. This sequence ends when the user selected number of samples offset by any trigger delay. At this point the buffer has a full set of samples collected. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission.
+#Abstract
+##A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second, between four channels, also about 2 dozen digital signals are able to be sampled at a 200MHz sampling rate. The FPGA collects and buffers analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates of up to six times per second can be supported. For both the analog and digital sections a nnumber of triggering options are supported. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated.
+#1. Theory of Operation
+##The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes. This signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (powers of two times 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay. When the ADC is halted the buffer has a full trace (#samples x samplerate) of valid ADC data for each active channel. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission. 
+##The Logic Analyzer function is resident in the FPGA and the user can switch between the two modes at any time. The same user programmable update_strobe signal initiates the acquisition of logic samples into on board buffer memory. The samples are collected whenever any of the defined logic levels change state. This sequence ends when the user selected number of samples offset by any trigger delay. At this point the buffer has a full set of samples collected. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission.
 2. Firmware
 2.1 Top Level Functionality
 logic.vhdl provides interconnectivity for the system component pieces, adcstream.vhdl, logicstream.vhdl, testinterface.vhdl and adc_qsys.qsys. It also provides a system level memory map of user accessible registers, various system timers and strobes are setup. 
@@ -24,74 +24,12 @@ After the ADC has been halted a signal is sent to activate the output state mach
 4. Oscilloscope Packet and Payload Format
 The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
 Serial Packet Description                            
-Byte Order
-Section
-Description
-0x00-0x07
-Header
-the string ‘oscope’
-0x08
 
-0xTPCC00NN   T=toggle no/yes, P=pol, CC=trigch
-                           NN=numberchannels
-0x09-0x0a
-
-numsamples
-0x0b-0x0c
-
-samplerate               0x0001 = 1usec/sample, etc 
-0x0d-0x0e
-
-triggeraddress         which sample is trigger time 
-0x0f-0x1b
-
-All 0xff
-0x1c-0x1f
-
-0x0000ffff
-0x20-0x20+
-  2 x numsamples x
-  numberchannels
-Data Payload
-Data payload – see structure below
-
-Structure of Payload Bytes  -  12 bits data + sync
-MSB
-0
-ch(1)
-ch(0)
-data(12)
-data(10)
-data(9)
-data(8)
-data(7)
-LSB
-1
-data(6)
-data(5)
-data(4)
-data(3)
-data(2)
-data(1)
-data(0)
 
 5. Oscilloscope Software
 The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
 The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 The software indicates trigger sample with a red ‘*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 6. Oscilloscope Demonstration
 To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
@@ -109,71 +47,12 @@ After the ADC has been halted a signal is sent to activate the output state mach
 8. Logic Analyzer Packet and Payload Format
 The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
 Serial Packet Description                            
-Byte Order
-Section
-Description
-0x00-0x07
-Header
-the string ‘oscope’
-0x08
 
-0xTPCC00NN   T=toggle no/yes, P=pol, CC=trigch
-                           NN=numberchannels
-0x09-0x0a
-
-numsamples
-0x0b-0x0c
-
-samplerate               0x0001 = 1usec/sample, etc 
-0x0d-0x0e
-
-triggeraddress         which sample is trigger time 
-0x0f-0x1b
-
-All 0xff
-0x1c-0x1f
-
-0x0000ffff
-0x20-0x20+
-  2 x numsamples x
-  numberchannels
-Data Payload
-Data payload – see structure below
-
-Structure of Payload Bytes  -  12 bits data + sync
-MSB
-0
-ch(1)
-ch(0)
-data(12)
-data(10)
-data(9)
-data(8)
-data(7)
-LSB
-1
-data(6)
-data(5)
-data(4)
-data(3)
-data(2)
-data(1)
-data(0)
 
 9. Logic Analyzer Software 
 The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
 The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 The software indicates trigger sample with a red ‘*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
-
-
-
-
-
-
-
-
-
-
 
 
 10. Logic Analyzer Demonstration
