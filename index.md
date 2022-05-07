@@ -3,10 +3,10 @@
 ![picture](testbenchboard.jpg)
 ```mermaid
 graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
+    top-->serialport;
+    serialpoty-->top;
+    top-->adcstream;
+    top-->logicstream;
 ```
 # 1. Theory of Operation
 #### The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes. This signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (powers of two times 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay. When the ADC is halted the buffer has a full trace (#samples x samplerate) of valid ADC data for each active channel. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission. 
