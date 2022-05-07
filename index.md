@@ -22,13 +22,32 @@ You can use the [editor on GitHub](https://github.com/baetis-ma/testbench/edit/g
 ### When a trigger is specified the ADC acquisition cycle will continue so that a full number of display samples are stored after triggering. The trigger currently implemented activates when the incoming measurements on the selected channel over the last four cycles are <50%fs, <50%fs, >=50%fs and >=50%fs (or the opposite for negative edge trigger selected), the trigger can be chosen to operate on each of the active channels positive or negative edge. Data is stored so that a full compliment of samples after the trigger are collected. The trigger offset can be greater than the number of samples (or even negative) within the constraints of the 16K sample buffer.
 ### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 # 4. Oscilloscope Packet and Payload Format
-The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
+### The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
 ### Serial Packet Description   
 ```
-| first header | second header | thiirs header |
-| ------------ | ------------- | ------------- |
-| 0x07         | 1234          | 5678          |
-|              | 123           | abcd          |
+|------------------|---------------|------------------------------------------------ |
+| Byte Order       |       Section |   Description                                   |
+|------------------|---------------|------------------------------------------------ |
+|       0x00-0x07  | Header        | the string ‘oscope’                             |
+|            0x08  |               | 0xTPCC00NN   T=toggle no/yes, P=pol, CC=trigch  |
+|                  |               | NN=numberchannels                               |
+|       0x09-0x0a  |               | numsamples                                      |
+|       0x0b-0x0c  |               | samplerate        0x0001 = 1usec/sample, etc    |
+|       0x0d-0x0e  |               | triggeraddress    which sample is trigger time  | 
+|       0x0f-0x1b  |               | All \\\\\0xff                                   |
+|       0x1c-0x1f  |               | 0x0000ffff                                      |
+|------------------|---------------|-------------------------------------------------|
+|       0x20-0x20+ | Data Payload  | Data payload – see structure below              |
+| 2 x numsamples   |               |                                                 |
+| numberchannels   |               |                                                 |
+|------------------|---------------|-------------------------------------------------|
+```
+### Structure of Payload
+```
+|---|------|----------|----------|----------|----------|----------|----------|----------|
+|MSB|    0 |    ch(1) |    ch(0) | data(12) | data(10) |  data(9) |  data(8) |  data(7) |
+|LSB|    1 |  data(6) |  data(5) |  data(4) |  data(3) |  data(2) |  data(1) |  data(0) |
+|---|------|----------|----------|----------|----------|----------|----------|----------|
 ```
 # 5. Oscilloscope Software
 ### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec, as in the printout below.
@@ -55,8 +74,34 @@ The Frame Packet transmitted from the oscilloscope board to the computer has the
 ### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
 ### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 ### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
-
-
+```
+set terminal wxt noraise background rgb 'dark-olivegreen'
+set autoscale
+set title "Oscilliscope"
+set xlabel "time (ms)"
+set grid ytics lt 0 lw 0.5 lc rgb "yellow"
+set grid xtics lt 0 lw 0.5 lc rgb "yellow"
+set yrange[-0.5:8]
+set xrange[0:1.000000]
+unset label 1
+set label 1 "*" font ",20" at 0.100000,-.75 center tc rgb 'red'
+set xlabel "time (ms) - 2us/ samp 500 samples/channel"
+set style line 1 lw 1.5 pt 7 ps .5 lc rgb 'salmon'
+set style line 2 lw 1.5 pt 7 ps .5 lc rgb 'sandybrown'
+array xa[4100]
+array y1a[4100]
+array y2a[4100]
+xa[1]  =  0.001; y1a[1] =  0.000; y2a[1] =  4.000
+xa[2]  =  0.003; y1a[2] =  0.000; y2a[2] =  4.000
+xa[3]  =  0.005; y1a[3] =  0.000; y2a[3] =  4.000
+xa[4]  =  0.007; y1a[4] =  0.000; y2a[4] =  4.000
+xa[5]  =  0.009; y1a[5] =  0.000; y2a[5] =  4.000
+xa[6]  =  0.011; y1a[6] =  0.000; y2a[6] =  4.000
+xa[7]  =  0.013; y1a[7] =  0.000; y2a[7] =  4.000
+xa[8]  =  0.015; y1a[8] =  0.000; y2a[8] =  4.000
+….
+Continues to last sample in trace
+```
 # 10. Logic Analyzer Demonstration
 ### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
 ### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
