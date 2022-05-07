@@ -116,9 +116,6 @@ int main(int argc, char **argv) {
    if(argc == 2) {sscanf(argv[1], "%s", buff); fd = serial_open(buff, B500000); }
    if (fd < 0) {fprintf(stderr, "cant find port %s\n", buff); exit(0); }
 
-   //initialize
-   rerundef();
-
    while(1) {
       //check if timestamp on ./definitions has changed
       stat("./definitions", &file_stat);
