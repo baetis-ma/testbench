@@ -156,6 +156,7 @@ h - this message
 ![oscope](oscopeuart2000.png)
 ##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
 ![nrf24l01](nrf-oscope.png)
+
 ![nrf24l01](nrf1.png)
 ##### chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
 ##### Having the scope really helped in the debug of this interference. 
