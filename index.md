@@ -298,11 +298,11 @@ replot
 ```
 ##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handelling these requests. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :
-- if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors.
-- if string entered from terminal stdin process string and update variable with menu()
-- if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
-- after reading packet run mkgnuplotprog() to generate gnuplot program file.
-- back to beginning of loop
+##### if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors.
+##### if string entered from terminal stdin process string and update variable with menu()
+##### if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
+##### after reading packet run mkgnuplotprog() to generate gnuplot program file.
+##### back to beginning of loop
 ```C
 int main(int argc, char **argv) {
    char buff[64];
@@ -338,6 +338,7 @@ int main(int argc, char **argv) {
 }
 ```
 ##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be editted, when the new file is saved it will be applied to the fpga on the next cycle.
+
 ```perl
 #definition file for logic.c analyzer
 #leading sharp is comment
