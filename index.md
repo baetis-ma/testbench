@@ -39,8 +39,8 @@ oscope��E����������������%��%��%��
 00000810: 00ff ffd0 2488 00d0 2488 00cf 2488 00d0  ....$...$...$...
 ```
  
-##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run `picocom -r -b 500000 -c`. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example `r 00` will read register 0 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example `w 00 1234` will write a new register value to fpga.
-##### In operation the uart serial port is connected to a program running on a lap/desktop computer that converts the packet data into a gnuplot program. The software is further described in 3. Software and 4.
+##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run `picocom -r -b 500000 -c`. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example `r 00` will read register 0x00 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example `w 00 1234` will write 0x1234 into address 0x10 of the fpga register space.
+##### In operation the uart serial port is connected to a program running on a lap/desktop computer that converts the packet data into a gnuplot program. The software is further described in 3. 
 ## 3. Oscilloscope Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input voltage measurement results and generates an output packet (described in next section) to the uart serial output.
 ##### At a rate determined by the user, a cycle is started to acquire data from the on board analog to digital converter. A channel number is loaded into the ADC control register and an acquisition cycle started, when the ADC has completed the data is read, formated and stored into on board sram. The address of the sram in incremented, a new channel number loaded into ADC control and after a programmed delay (selecable by user – samplerate) another cycle started. The channel numbers are a round robin of the active channels. This cycle repeats until the required amount of data is stored in the buffer and the ADC halted. For the case of no trigger the ADC will be halted once the user selected number of samples are collected for each channel.
@@ -48,7 +48,7 @@ oscope��E����������������%��%��%��
 ##### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 ## 4. Oscilloscope Packet and Payload Format
 ##### The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
-##### Serial Packet Description   
+#### Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
 | Byte Order       |       Section |   Description                                   |
