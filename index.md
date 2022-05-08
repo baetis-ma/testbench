@@ -10,8 +10,36 @@
 ##### The top level also generates an output gated pwm output that is user selectable in cycle width and duty cycle on the pwm2 output, pwm3 has user programmed 16 bits of logic sequence and pwm4 is a user programmed synthesized sinewave.
 ### 2.2 Serial Interface 
 ##### *textinterface.vhdl* provides serial tx and rx port ttl to usb cable, baud rate is 500000 baud. The serial port is providing three functions shared on a single interface. The first of this is a high speed output path to get the oscilloscope frame packet to the computer for processing, the second is to provide an I/O interface to be able to modify parameters in the oscilloscope that effect its’ data collection, such as number of samples, time base, trigger parameters, number channel, etc. The third function is a pipe to the program gnuplot which provides the output display.
-##### To view the output packet in hexadecimal connect mini usb connector to serial output port on the oscilliscope board and the other end to a lap/desktop computer, the oscilloscope board get its power from the usb cable and will power up automatically. On the computer open a terminal and check which com port the oscilloscope board is attached to. Run ‘stty -F /dev/ttyUSB0 500000 raw’, then ‘cat /dev/USB0’. You can see the raw packets being generated if everything is going right, piping this output into xxd presents the data in a readable form. The fpga comes up in oscilloscope mode two channel, no trigger mode with timing set at 1usec/sample and 1000 total samples. 
-##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run picocom -r -b 500000 -c. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example ‘r 00’ will read register 0 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example ‘w 00 1234’ will write new register value to fpga.
+##### To view the output packet in hexadecimal connect mini usb connector to serial output port on the oscilliscope board and the other end to a lap/desktop computer, the oscilloscope board get its power from the usb cable and will power up automatically. On the computer open a terminal and check which com port the oscilloscope board is attached to. Run `stty -F /dev/ttyUSB0 500000 raw`, then try the following commands. 
+```
+cat /dev/ttyUSB0 
+oscope��E����������������%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��&�
+         �&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��%��&��&��&��%��%��%��%��%��&��&��&��%��%��%��%��%��&��&��&��&��%��%��%��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��&��
+```
+##### You can see the raw packets being generated if everything is going right, piping this output into xxd presents the data in a readable form. The fpga comes up in oscilloscope mode two channel, no trigger mode with timing set at 1usec/sample and 1000 total samples.
+```
+--> cat /dev/ttyUSB0 | xxd
+00000000: 0a0d 6f73 636f 7065 9207 d000 0100 f9ff  ..oscope........
+00000010: ffff ffff ffff ffff ffff ffff 0000 ffff  ................
+00000020: b823 8800 b723 8900 b723 8800 b723 8800  .#...#...#...#..
+00000030: b723 8800 b723 8800 b723 8800 b823 8800  .#...#...#...#..
+00000040: b723 8800 b823 8800 b723 8800 b623 8800  .#...#...#...#..
+00000050: b623 8800 b623 8700 b723 8800 b623 8800  .#...#...#...#..
+00000060: b723 8800 b723 8800 b723 8800 b623 8800  .#...#...#...#..
+... skipping several lines
+00000780: bc23 8800 bb23 8800 bb23 8800 bb23 8800  .#...#...#...#..
+00000790: bc23 8800 bb23 8900 bc23 8900 bc23 8800  .#...#...#...#..
+000007a0: bb23 8900 bc23 8800 bc23 8800 bc23 8800  .#...#...#...#..
+000007b0: bb23 8800 bc23 8800 bc23 8800 bb23 8700  .#...#...#...#..
+000007c0: bc23 8800 bc23 8800 bb23 8800 bc23 8800  .#...#...#...#..
+000007d0: bc23 8800 bc23 8800 bc23 8800 bc23 8800  .#...#...#...#..
+000007e0: bc23 8800 bd23 8800 bc23 8800 bb23 8800  .#...#...#...#..
+000007f0: bb0a 0d0a 0d6f 7363 6f70 6592 07d0 0001  .....oscope.....
+00000800: 00c5 ffff ffff ffff ffff ffff ffff ff00  ................
+00000810: 00ff ffd0 2488 00d0 2488 00cf 2488 00d0  ....$...$...$...
+```
+ 
+##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run `picocom -r -b 500000 -c`. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example `r 00` will read register 0 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example `w 00 1234` will write a new register value to fpga.
 ##### In operation the uart serial port is connected to a program running on a lap/desktop computer that converts the packet data into a gnuplot program. The software is further described in 3. Software and 4.
 ## 3. Oscilloscope Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input voltage measurement results and generates an output packet (described in next section) to the uart serial output.
@@ -75,7 +103,7 @@ xa[9]  =  0.018;  y1a[9] =  0.000; y2a[9] =  4.000;
 xa[10]  =  0.020;  y1a[10] =  0.000; y2a[10] =  4.000;
 xa[11]  =  0.022;  y1a[11] =  0.000; y2a[11] =  4.000;
 xa[12]  =  0.024;  y1a[12] =  0.000; y2a[12] =  4.000;
-...
+... skipping several hundred lines ...
 xa[498]  =  0.996;  y1a[498] =  0.000; y2a[498] =  4.000;
 xa[499]  =  0.998;  y1a[499] =  0.000; y2a[499] =  4.000;
 xa[500]  =  1.000;  y1a[500] =  0.000; y2a[500] =  4.000;
