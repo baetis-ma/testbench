@@ -227,9 +227,6 @@ h - this message
 ## 9. Logic Analyzer Software 
 ##### The software sets up a connection to the logic uart output through a usb cable. As the data streams in the program synchronizes to the ‘logical’ portion of the header and reads the rest of the header. The data payload portion of the packet is parsed into voltage measurements for the each of the active channels. For each packet a gnuplot program file is sent to stdout, as an example this is this is display to forty transitions after trigger on bus named pwm with value 0x4.
 
-
-
-
 ```gnuplot
 #!/usr/bin/gnuplot -p
 set terminal wxt noraise size 1200, 400 background rgb 'dark-olivegreen'
@@ -303,6 +300,7 @@ replot
 ##### if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
 ##### after reading packet run mkgnuplotprog() to generate gnuplot program file.
 ##### back to beginning of loop
+
 ```C
 int main(int argc, char **argv) {
    char buff[64];
