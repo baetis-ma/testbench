@@ -46,7 +46,7 @@
 |LSB|    1 |  data(6) |  data(5) |  data(4) |  data(3) |  data(2) |  data(1) |  data(0) |
 |---|------|----------|----------|----------|----------|----------|----------|----------|
 ```
-# 5. Oscilloscope Software
+## 5. Oscilloscope Software
 ##### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled 500x at 2usec as in the printout below.
 ```gnuplot
 #!/usr/bin/gnuplot -p
@@ -85,7 +85,7 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'\n");
 set output 'output.png'
 replot
 ```
-##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and  to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and  to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on the terminal.
 ```C
 //sync and read packet
 int readpacket()
@@ -130,8 +130,7 @@ int readpacket()
 }
 ```
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
-![oscope](oscopeuart2000.png)
-# 6. Oscilloscope Demonstration
+## 6. Oscilloscope Demonstration
 ##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state.
 ```
 timebase <time in us>
@@ -152,10 +151,9 @@ o - trigger offset in samples
 i - sync fpga to gnuplot
 h - this message
 ```
-##### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
+##### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running `./oscope0 | gnuplot`. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
 #### In an idle terminal window type `echo hi > devttyUSB1`, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
-
-
+![oscope](oscopeuart2000.png)
 ##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
 ![nrf24l01](nrf-oscope.png)
 ![nrf24l01](nrf1.png)
