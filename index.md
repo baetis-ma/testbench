@@ -294,7 +294,6 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'
 set output 'output.png'
 replot
 ```
-##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handelling these requests. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :
 - if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors.
@@ -360,12 +359,8 @@ pwm         1   3     4
 ## 10. Logic Analyzer Demonstration
 ##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
 ![Logic Analyzer trace](./output.png)
-##### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running ‘./oscope0 | gnuplot’. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
-##### In an idle terminal window type ‘echo hi > devttyUSB1’, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘hi\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
-##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
-##### chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
-## 11. Setting up Software
-### 11.1 Altera Quartus
+##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
+## 11. Setting up Altera Quartus Software
 ##### Search and download Intel Quartus Prime Lite Edition Design Software, my machine is running ubuntu and using version 21.1. Extract software and install.sh. Give your self permissions for a serial port if necessary.
 ##### From a terminal go to directory where you want cyc1000-drone project installed and install git. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
 ```
@@ -380,7 +375,7 @@ quartus_sh --flow compile oscope                                                
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.sof"  (program fpga sram)
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
-##### The file command in the base directory has several other useful commands.
+##### The file command in the base directory has several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add to project.
 ## 12. Conculding Remarks
 ##### This board make a very functional test bench that is very easy to use. To use the board it is plugged into a usb port (which supplies power) and either the `./oscope | gnuplot` or './logic | gnuplot` program lauched in a terminal. While the gnuplot screen is updating with new traces several times a secong the user can modify timebase, number of samples, triggering and display fine tuning commands from the terminal in realtime.
 ##### The MAX1000 boards are availble for anout forty dollars. The programming code is free to download and use.
