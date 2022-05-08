@@ -47,7 +47,6 @@ oscope��E����������������%��%��%��
 ##### When a trigger is specified the ADC acquisition cycle will continue so that a full number of display samples are stored after triggering. The trigger currently implemented activates when the incoming measurements on the selected channel over the last four cycles are <50%fs, <50%fs, >=50%fs and >=50%fs (or the opposite for negative edge trigger selected), the trigger can be chosen to operate on each of the active channels positive or negative edge. Data is stored so that a full compliment of samples after the trigger are collected. The trigger offset can be greater than the number of samples (or even negative) within the constraints of the 16K sample buffer.
 ##### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 ## 4. Oscilloscope Packet and Payload Format
-##### The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
 #### Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
@@ -69,10 +68,12 @@ oscope��E����������������%��%��%��
 ```
 #### Structure of Payload
 ```
-|---|------|----------|----------|----------|----------|----------|----------|----------|
-|MSB|    0 |    ch(1) |    ch(0) | data(12) | data(10) |  data(9) |  data(8) |  data(7) |
-|LSB|    1 |  data(6) |  data(5) |  data(4) |  data(3) |  data(2) |  data(1) |  data(0) |
-|---|------|----------|----------|----------|----------|----------|----------|----------|
+|---|-------|----------|----------|----------|----------|----------|----------|----------|
+|   | byte7 |   byte6  |   byte5  |   byte4  |   byte3  |   byte2  |   byte1  |   byte0  |
+|---|-------|----------|----------|----------|----------|----------|----------|----------|
+|MSB|    0  |    ch(1) |    ch(0) | data(12) | data(10) |  data(9) |  data(8) |  data(7) |
+|LSB|    1  |  data(6) |  data(5) |  data(4) |  data(3) |  data(2) |  data(1) |  data(0) |
+|---|-------|----------|----------|----------|----------|----------|----------|----------|
 ```
 ## 5. Oscilloscope Software
 ##### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled 500x at 2usec as in the printout below.
@@ -187,16 +188,14 @@ h - this message
 ##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
 ![nrf24l01](nrf-oscope.png)
 
-![nrf24l01](nrf1.png)
-##### Having the scope really helped in the debug of this interference. 
+![nrf24l01](nrf1.png) 
 ## 7. Logic Analyzer Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input voltage measurement results and generates an output packet (described in next section) to the uart serial output.
 ##### At a rate determined by the user, a cycle is started to acquire data from the on board analog to digital converter. A channel number is loaded into the ADC control register and an acquisition cycle started, when the ADC has completed the data is read, formated and stored into on board sram. The address of the sram in incremented, a new channel number loaded into ADC control and after a programmed delay (selecable by user – samplerate) another cycle started. The channel numbers are a round robin of the active channels. This cycle repeats until the required amount of data is stored in the buffer and the ADC halted. For the case of no trigger the ADC will be halted once the user selected number of samples are collected for each channel.
 ##### When a trigger is specified the ADC acquisition cycle will continue so that a full number of display samples are stored after triggering. The trigger currently implemented activates when the incoming measurements on the selected channel over the last four cycles are <50%fs, <50%fs, >=50%fs and >=50%fs (or the opposite for negative edge trigger selected), the trigger can be chosen to operate on each of the active channels positive or negative edge. Data is stored so that a full compliment of samples after the trigger are collected. The trigger offset can be greater than the number of samples (or even negative) within the constraints of the 16K sample buffer.
 ##### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 ## 8. Logic Analyzer Packet and Payload Format
-##### The Frame Packet transmitted from the oscilloscope board to the computer has the following format.
-##### Logic Analyzer Serial Packet Description   
+#### Logic Analyzer Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
 | Byte Order       |       Section |   Description                                   |
@@ -212,8 +211,9 @@ h - this message
 |      numsamples  |               |                                                 |
 |------------------|---------------|-------------------------------------------------|
 ```
-##### Structure of Logic Analyzer Payload
+#### Structure of Logic Analyzer Payload
 ```
+|-----|------------|------------|------------|------------|------------|------------|------------|
 |byte7|    byte6   |    byte5   |    byte4   |     byte3  |     byte2  |     byte1  |     byte0  |    
 |-----|------------|------------|------------|------------|------------|------------|------------|
 |   1 |   time(27) |   time(26) |   time(25) |   time(24) |   time(23) |   time(22) |   time(21) |
