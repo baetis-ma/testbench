@@ -335,7 +335,7 @@ int main(int argc, char **argv) {
 }
 ```
 ##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be editted, when the new file is saved it will be applied to the fpga on the next cycle.
-```perl
+```
 \#definition file for logic.c analyzer
 \#leading sharp is comment
 \#column 1 is name you want on plot
