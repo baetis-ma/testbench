@@ -280,3 +280,7 @@ quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
 ##### The file command in the base directory has several other useful commands.
+## 12. Conculding Remarks
+##### This board make a very functional test bench that is very easy to use. To use the board it is plugged into a usb port (which supplies power) and either the `./oscope | gnuplot` or './logic | gnuplot` program lauched in a terminal. While the gnuplot screen is updating with new traces several times a secong the user can modify timebase, number of samples, triggering and display fine tuning commands from the terminal in realtime.
+##### The MAX1000 boards are availble for anout forty dollars. The programming code is free to download and use.
+##### This code could be used with many Altera FPGAs, adding an external Analog to Digital Converter (or forgoing the Oscilloscope portion) would require relatively few changes to the firmware. Moving to another companies firmware would involved modifing the pll, adc and sram modules built with qsys.
