@@ -37,7 +37,6 @@ oscope��E����������������%��%��%��
 00000800: 00c5 ffff ffff ffff ffff ffff ffff ff00  ................
 00000810: 00ff ffd0 2488 00d0 2488 00cf 2488 00d0  ....$...$...$...
 ```
- 
 ##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run `picocom -r -b 500000 -c`. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example `r 00` will read register 0x00 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example `w 00 1234` will write 0x1234 into address 0x10 of the fpga register space.
 ##### In operation the uart serial port is connected to a program running on a lap/desktop computer that converts the packet data into a gnuplot program. The software is further described in 3. 
 ## 3. Oscilloscope Data Collection and Management
@@ -227,6 +226,10 @@ h - this message
 ```
 ## 9. Logic Analyzer Software 
 ##### The software sets up a connection to the logic uart output through a usb cable. As the data streams in the program synchronizes to the ‘logical’ portion of the header and reads the rest of the header. The data payload portion of the packet is parsed into voltage measurements for the each of the active channels. For each packet a gnuplot program file is sent to stdout, as an example this is this is display to forty transitions after trigger on bus named pwm with value 0x4.
+
+
+
+
 ```gnuplot
 #!/usr/bin/gnuplot -p
 set terminal wxt noraise size 1200, 400 background rgb 'dark-olivegreen'
@@ -335,7 +338,7 @@ int main(int argc, char **argv) {
 }
 ```
 ##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be editted, when the new file is saved it will be applied to the fpga on the next cycle.
-```
+```perl
 #definition file for logic.c analyzer
 #leading sharp is comment
 #column 1 is name you want on plot
