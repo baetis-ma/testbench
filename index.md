@@ -354,7 +354,6 @@ pwm2        2   1    -1
 pwm1        1   1    -1
 pwm0        0   1    -1
 pwm         1   3     4
-
 ```
 ## 10. Logic Analyzer Demonstration
 ##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
