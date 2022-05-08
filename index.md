@@ -295,11 +295,11 @@ replot
 ```
 ##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handelling these requests. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :  
-###### - if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors
-###### - if string entered from terminal stdin process string and update variable with menu() 
-###### - if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
-###### - after reading packet run mkgnuplotprog() to generate gnuplot program file.
-###### - back to beginning of loop
+- if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors
+- if string entered from terminal stdin process string and update variable with menu() 
+- if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
+- after reading packet run mkgnuplotprog() to generate gnuplot program file.
+- back to beginning of loop
 
 ```C
 int main(int argc, char **argv) {
