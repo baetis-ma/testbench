@@ -297,11 +297,13 @@ replot
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :  
 
 > if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors
-
+>
 > if string entered from terminal stdin process string and update variable with menu()
 > 
 > if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
+>
 > after reading packet run mkgnuplotprog() to generate gnuplot program file.
+>
 > back to beginning of loop
 
 ```C
