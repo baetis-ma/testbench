@@ -347,6 +347,7 @@ int main(int argc, char **argv) {
 }
 ```
 ##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
+```
     #definition file for logic.c analyzer
     #leading sharp is comment
     #column 1 is name you want on plot
@@ -366,7 +367,7 @@ int main(int argc, char **argv) {
     pwm1        1   1    -1
     pwm0        0   1    -1
     pwm         1   3     4
-
+```
 (had to remove comment # from column 0 so that .md would render to .html, #s present in file)
 ## 10. Logic Analyzer Demonstration
 ##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
