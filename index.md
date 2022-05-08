@@ -1,4 +1,4 @@
-# Abstract
+# Abstract1
 ##### A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second, between four channels, about 2 dozen digital signals are able to be sampled at a 200MHz sampling rate. The FPGA collects and buffers analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates up to six times per second are consistant on my 10yo machine. Both the analog and digital have a number of triggering options available. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated. 
 ![picture](testbenchboard.jpg)
 ## 1. Theory of Operation
