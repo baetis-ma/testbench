@@ -227,11 +227,83 @@ h - this message
 |-----|------------|------------|------------|------------|------------|------------|------------|
 ```
 ## 9. Logic Analyzer Software 
-##### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header (check 2.4 Packet Format). The data payload portion of the packet is parsed into voltage measurements for the each of the active channels (check 2.4 Payload Format). For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled at 2usec:
-##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and invoking kbhit() to determine if a command has been entered (further discussion in next section), if either is true the data is processed or the input command processed. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+##### The software sets up a connection to the logic uart output through a usb cable. As the data streams in the program synchronizes to the ‘logical’ portion of the header and reads the rest of the header. The data payload portion of the packet is parsed into voltage measurements for the each of the active channels. For each packet a gnuplot program file is sent to stdout, as an example this is this is display to forty transitions after trigger on bus named pwm with value 0x4.
+```gnuplot
+#!/usr/bin/gnuplot -p
+set terminal wxt noraise size 1200, 400 background rgb 'dark-olivegreen'
+set yrange [-1:25]
+set xrange [12726.02:33773.80]
+unset label
+unset ytics
+unset key
+set style line 1 linecolor rgb 'orange' lw 2
+set label 1 "*" font ",20" at 19559.920000,-.75 center tc rgb 'red'
+array xa[1000]
+array y0a[1000]
+array y1a[1000]
+array y2a[1000]
+array y3a[1000]
+array y4a[1000]
+array y5a[1000]
+set label "pwm3" at 12726.020,0 tc "white" front rotate by 60 font ",14"
+set label "pwm2" at 12726.020,5 tc "white" front rotate by 60 font ",14"
+set label "pwm1" at 12726.020,10 tc "white" front rotate by 60 font ",14"
+set label "pwm0" at 12726.020,15 tc "white" front rotate by 60 font ",14"
+set label "pwm" at 12726.020,20 tc "white" front rotate by 60 font ",14"
+set label "x06" at 13559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x01" at 14559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x05" at 15559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x03" at 16559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x07" at 17559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x00" at 18559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x04" at 19559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x02" at 20559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x06" at 21559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x01" at 22559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x05" at 23559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x03" at 24559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x07" at 25559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x00" at 26559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x04" at 27559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x02" at 28559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x06" at 29559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x01" at 30559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x05" at 31559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x03" at 32559.920,20.5 rotate by 60 tc "orange" font ",13"
+set label "x07" at 33559.920,20.5 rotate by 60 tc "orange" font ",13"
+xa[78]=12726.015;y0a[78]=-1097861760;y1a[78]=8;y2a[78]=5;y3a[78]=0;y4a[78]=23;y5a[78]=20;       
+xa[79]=12726.020;y0a[79]=0;y1a[79]=8;y2a[79]=10;y3a[79]=18;y4a[79]=23;y5a[79]=20;
+xa[80]=12766.975;y0a[80]=0;y1a[80]=8;y2a[80]=10;y3a[80]=18;y4a[80]=23;y5a[80]=20;
+xa[81]=12766.980;y0a[81]=0;y1a[81]=8;y2a[81]=10;y3a[81]=15;y4a[81]=23;y5a[81]=20;
+xa[82]=13559.915;y0a[82]=0;y1a[82]=8;y2a[82]=10;y3a[82]=15;y4a[82]=23;y5a[82]=20;
+xa[83]=13559.920;y0a[83]=3;y1a[83]=8;y2a[83]=10;y3a[83]=15;y4a[83]=20;y5a[83]=23;
+... skipping several lines ...
+xa[200]=32773.475;y0a[200]=0;y1a[200]=8;y2a[200]=13;y3a[200]=18;y4a[200]=23;y5a[200]=20;
+xa[201]=32773.480;y0a[201]=0;y1a[201]=8;y2a[201]=13;y3a[201]=15;y4a[201]=23;y5a[201]=20;
+xa[202]=33559.915;y0a[202]=0;y1a[202]=8;y2a[202]=13;y3a[202]=15;y4a[202]=23;y5a[202]=20;
+xa[203]=33559.920;y0a[203]=3;y1a[203]=8;y2a[203]=13;y3a[203]=15;y4a[203]=20;y5a[203]=23;
+xa[204]=33732.835;y0a[204]=3;y1a[204]=8;y2a[204]=13;y3a[204]=15;y4a[204]=20;y5a[204]=23;      
+xa[205]=33732.840;y0a[205]=3;y1a[205]=8;y2a[205]=13;y3a[205]=18;y4a[205]=20;y5a[205]=23;
+plot xa u 2:(y0a[$1]) w lines ls 1, \
+     xa u 2:(y1a[$1]) w lines ls 1, \
+     xa u 2:(y2a[$1]) w lines ls 1, \
+     xa u 2:(y3a[$1]) w lines ls 1, \
+     xa u 2:(y4a[$1]) w lines ls 1, \
+     xa u 2:(y5a[$1]) w lines ls 1
+set terminal png size 1200, 400 background rgb 'dark-olivegreen'
+set output 'output.png'
+replot
+```
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handelling these requests. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :
+- if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors.
+- if string entered from terminal stdin process string and update variable with menu()
+- if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
+- after reading packet run mkgnuplotprog() to generate gnuplot program file.
+- back to beginning of loop
 ```C
-int main(int argc, char **argv) {IMG_20220322_100712587
+int main(int argc, char **argv) {
    char buff[64];
    int aa =0, a;
    time_t oldMTime, newMTime;
