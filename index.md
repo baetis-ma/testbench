@@ -312,6 +312,7 @@ replot
 - if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
 - after reading packet run mkgnuplotprog() to generate gnuplot program file.
 - back to beginning of loop
+
 ```C
 int main(int argc, char **argv) {
    char buff[64];
