@@ -4,7 +4,20 @@
 ## 1. Theory of Operation
 ##### The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes. This signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (powers of two times 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay. When the ADC is halted the buffer has a full trace (#samples x samplerate) of valid ADC data for each active channel. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission. 
 ##### The Logic Analyzer function is resident in the FPGA and the user can switch between the two modes at any time. The same user programmable update_strobe signal initiates the acquisition of logic samples into on board buffer memory. The samples are collected whenever any of the defined logic levels change state. This sequence ends when the user selected number of samples offset by any trigger delay. At this point the buffer has a full set of samples collected. At this point the output state machine is activated which generates a packet forwarded to the uart for transmission.
-## 2. Firmware
+## 2. Firmware#definition file for logic.c analyzer
+#leading sharp is comment
+#column 1 is name you want on plot
+#column 2 is lsb of  packet data to plot
+#column 3 is width of vector assigned to name
+#column 4 is trigger value 
+#   - neg value will not contribute to trigger
+#   - each >= 0 value will contribute to trig word
+#   - trig generated on first occurance of trig word
+
+
+#str1u     13   1    -1
+#cnt1u      4   8    45
+
 ### 2.1 Top Level Functionality
 ##### *logic.vhdl* provides interconnectivity for the system component pieces, adcstream.vhdl, logicstream.vhdl, testinterface.vhdl and adc_qsys.qsys. It also provides a system level memory map of user accessible registers, various system timers and strobes are setup.
 ### 2.2 Serial Interface 
@@ -334,20 +347,20 @@ int main(int argc, char **argv) {
 }
 ```
 ##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
-```gnuplot
- #definition file for logic.c analyzer
- #leading sharp is comment
- #column 1 is name you want on plot
- #column 2 is lsb of  packet data to plot
- #column 3 is width of vector assigned to name
- #column 4 is trigger value 
- #   - neg value will not contribute to trigger
- #   - each >= 0 value will contribute to trig word
- #   - trig generated on first occurance of trig word
+```
+ definition file for logic.c analyzer
+ leading sharp is comment
+ column 1 is name you want on plot
+ column 2 is lsb of  packet data to plot
+ column 3 is width of vector assigned to name
+ column 4 is trigger value 
+    - neg value will not contribute to trigger
+    - each >= 0 value will contribute to trig word
+    - trig generated on first occurance of trig word
 
 
- #str1u     13   1    -1
- #cnt1u      4   8    45 
+ str1u     13   1    -1
+ cnt1u      4   8    45 
 
  pwm3        3   1    -1
  pwm2        2   1    -1
