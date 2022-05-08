@@ -159,8 +159,10 @@ int readpacket()
 ```
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 6. Oscilloscope Demonstration
-##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fppa mapped resgisters are displayed, a status line appears summarizing the acquisition state.
+##### To start the program enter `./oscope0 | gnuplot`. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Commands can be entered as a command string, if the command string is recognised and the parameters valid the command will be applied. If the command was not recognised the first char of the string will be examined as the menu shows, the user will be prompted for input.
 ```
+--> ./oscope | gnuplot
+help                                 (typed by user or just h)
 timebase <time in us>
 samples <number samples>
 channels <number channeles>
@@ -179,14 +181,13 @@ o - trigger offset in samples
 i - sync fpga to gnuplot
 h - this message
 ```
-##### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured by ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was connected by running `./oscope0 | gnuplot`. The following parameters were changes, samples (S) to 2000, channels (c) to 1, timebase to 2 and o (trigger offset to .15). Attach channel1 scope lead to rx pin of the cp2101 module.
-#### In an idle terminal window type `echo hi > devttyUSB1`, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output. 
+##### As an example of a use use case for the oscillicope, a cp2102 usb to ttl uart serial adapter was hooked up to a computer and assigned /dev/ttyUSB1. The port was configured with ‘stty -F /dev/ttyUSB1 115200. The oscilloscope at /dev/ttyUSB0 was run `./oscope0 | gnuplot`. The following parameters were changed, samples (S) to 2000, channels (c) to 1, timebase to 2msec and o (trigger offset) to .15. Attach channel1 scope lead to rx pin of the cp2101 module.
+#### In an idle terminal window type `echo hi > devttyUSB1`, a display similar to the one about should appear on your monitor. It shows a display of one channel, sampled at 1usec rate for 2msec. The trace shows three ascii characters which decode as 0x68, 0x69 and 0x0a, or ‘\<lf\>’ along with start and stop bits at 115200 baud. (The digital sequence was photoshopped in to demonstrate the ascii output - this was my first trace when debugging the oscilloscope). 
 ![oscope](oscopeuart2000.png)
-##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace
+##### The next couple trace displays come from a project integrating some NRL24L0+ 2.4GHz R/F modules. These devices use an spi communications protocol. The first graph shows, from the bottom trace chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
 ![nrf24l01](nrf-oscope.png)
 
 ![nrf24l01](nrf1.png)
-##### chip enable, miso, spi clk and mosi. This trace is showing several bytes of data read and written to the module. The next trace displays shows the nrf24l0+ waiting for a packet and timing out, then waiting for a packet till received, then reading the packet and responding.
 ##### Having the scope really helped in the debug of this interference. 
 ## 7. Logic Analyzer Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input voltage measurement results and generates an output packet (described in next section) to the uart serial output.
