@@ -157,7 +157,7 @@ int readpacket()
 ```
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 6. Oscilloscope Demonstration
-##### To start the program enter `./oscope0 | gnuplot`. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explaination, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Commands can be entered as a command string, if the command string is recognised and the parameters valid the command will be applied. If the command was not recognised the first char of the string will be examined as the menu shows, the user will be prompted for input.
+##### To start the program enter `./oscope0 | gnuplot`. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. An example is shown of changing the timebase. Commands can be entered as a command string, if the command string is recognized and the parameters valid the command will be applied. If the command was not recognized the first char of the string will be examined as the menu shows, the user will be prompted for input.
 ```
 --> ./oscope | gnuplot
 help                                 (typed by user or just h)
@@ -292,11 +292,11 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'
 set output 'output.png'
 replot
 ```
-##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handelling these requests. Executing ‘./oscope | gnuplot’ will result in gnuplot display of the oscilloscope output, executing ‘./oscope’ command will result in the gnuplot commands being displayed on screen.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handeling these requests. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on screen.
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :  
 - if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors
 - if string entered from terminal stdin process string and update variable with menu() 
-- if neither of these run readpacket() which will look for sync work and then read and dissassemble packet
+- if neither of these run readpacket() which will look for sync work and then read and disassemble packet
 - after reading packet run mkgnuplotprog() to generate gnuplot program file.
 - back to beginning of loop
 
@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
     #column 4 is trigger value 
     #    - neg value will not contribute to trigger
     #    - each >= 0 value will contribute to trig word
-    #    - trig generated on first occurance of trig word
+    #    - trig generated on first occurrence of trig word
 
 
     #str1u     13   1    -1
@@ -358,11 +358,11 @@ int main(int argc, char **argv) {
 ```
 
 ## 10. Logic Analyzer Demonstration
-##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toogles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped resgisters are displayed, a status line appears summarizing the acquisition state. 
+##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped registers are displayed, a status line appears summarizing the acquisition state. 
 ![Logic Analyzer trace](./output.png)
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 11. Setting up Altera Quartus Software
-##### Search and download Intel Quartus Prime Lite Edition Design Software, my machine is running ubuntu and using version 21.1. Extract software and install.sh. Give your self permissions for a serial port if necessary.
+##### Search and download Intel Quartus Prime Lite Edition Design Software, my machine is running ubuntu and using version 21.1. Extract software and `install.sh`. Give your self permissions for a serial port if necessary.
 ##### From a terminal go to directory where you want cyc1000-drone project installed and install git. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
 ```
 git clone -r https://github.com/baetis-ma/max1000-oscope.git
@@ -377,7 +377,7 @@ quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
 ##### The file command in the base directory has several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add to project.
-## 12. Conculding Remarks
-##### This board make a very functional test bench that is very easy to use. To use the board it is plugged into a usb port (which supplies power) and either the `./oscope | gnuplot` or './logic | gnuplot` program launched in a terminal. While the gnuplot screen is updating with new traces several times a secong the user can modify timebase, number of samples, triggering and display fine tuning commands from the terminal in realtime.
-##### The MAX1000 boards are availble for anout forty dollars. The programming code is free to download and use.
-##### This code could be used with many Altera FPGAs, adding an external Analog to Digital Converter (or forgoing the Oscilloscope portion) would require relatively few changes to the firmware. Moving to another companies firmware would involved modifing the pll, adc and sram modules built with qsys.
+## 12. Concluding Remarks
+##### This board make a very functional test bench that is very easy to use. To use the board it is plugged into a usb port (which supplies power) and either the `./oscope | gnuplot` or './logic | gnuplot` program launched in a terminal. While the gnuplot screen is updating with new traces several times a second the user can modify timebase, number of samples, triggering and display fine tuning commands from the terminal in realtime.
+##### The MAX1000 boards are available for about forty dollars. The programming code is free to download and use.
+##### This code could be used with many Altera FPGAs, adding an external Analog to Digital Converter (or forgoing the Oscilloscope portion) would require relatively few changes to the firmware. Moving to another companies firmware would involved modifying the pll, adc and sram modules built with qsys.
