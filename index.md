@@ -1,4 +1,4 @@
-# Abstract1
+# Abstract
 ##### A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second shared between up to four channels, and about 2 dozen digital signals sampled digitally at a 200MHz. The FPGA collects and buffers the analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop+ or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates up to six times per second are consistent on my 10yo machine. Both the analog and digital have a number of triggering options available. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated. 
 ![picture](testbenchboard.jpg)
 ## 1. Theory of Operation
@@ -189,7 +189,28 @@ h - this message
 ## 7. Logic Analyzer Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input state results and generates an output packet to the uart serial output.
 ##### At an update rate determined by the user, a cycle is started to acquire data from the on board digital signals. If any of the umasked signals change state 27 bits of data are stored in sram along with a timestamp (number of clocks since acq start). The address of the sram in incremented and another cycle started, this cycle repeats until the required amount of data is stored in the buffer and acquisition halted.
-##### Triggering is accomplished with the ./definitions
+##### The ./definitions file, shown below, makes setting up the 32 bit mask, trigger_mask and trigger_value vectors very simple. The file logic.vhdl assigns fpga std_logic values to the logic_data(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16kb logic buffer when (mask & logic_data) changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and (triggermask & logic_data) = trigger_value. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
+```
+    #definition file for logic.c analyzer
+    #leading sharp is comment
+    #column 1 is name you want on plot
+    #column 2 is lsb of  packet data to plot
+    #column 3 is width of vector assigned to name
+    #column 4 is trigger value 
+    #    - neg value will not contribute to trigger
+    #    - each >= 0 value will contribute to trig word
+    #    - trig generated on first occurrence of trig word
+
+
+    #str1u     13   1    -1
+    #cnt1u      4   8    45 
+    
+    pwm3        3   1    -1
+    pwm2        2   1    -1
+    pwm1        1   1    -1
+    pwm0        0   1    -1
+    pwm         1   3     4
+```
 ##### After the acqisition has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 ## 8. Logic Analyzer Packet and Payload Format
 #### Logic Analyzer Serial Packet Description   
@@ -333,28 +354,6 @@ int main(int argc, char **argv) {
       mkgnuplotprog();                        //make gnuplot program
    }
 }
-```
-##### The ./definitions file, shown below, makes setting up the 32 bit sample mask, trigger mask and sample value vectors very simple. The file logic.vhdl assigns std_logic values to the dataout(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16k logic buffer when mask & dataout changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and triggermask & dataout are equal to triggervalue. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
-```
-    #definition file for logic.c analyzer
-    #leading sharp is comment
-    #column 1 is name you want on plot
-    #column 2 is lsb of  packet data to plot
-    #column 3 is width of vector assigned to name
-    #column 4 is trigger value 
-    #    - neg value will not contribute to trigger
-    #    - each >= 0 value will contribute to trig word
-    #    - trig generated on first occurrence of trig word
-
-
-    #str1u     13   1    -1
-    #cnt1u      4   8    45 
-    
-    pwm3        3   1    -1
-    pwm2        2   1    -1
-    pwm1        1   1    -1
-    pwm0        0   1    -1
-    pwm         1   3     4
 ```
 
 ## 10. Logic Analyzer Demonstration
