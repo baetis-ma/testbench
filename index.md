@@ -190,28 +190,16 @@ h - this message
 ### 5.1 Logic Analyzer Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input state results and generates an output packet to the uart serial output.
 ##### At an update rate determined by the user, a cycle is started to acquire data from the on board digital signals. If any of the umasked signals change state 27 bits of data are stored in sram along with a timestamp (number of clocks since acq start). The address of the sram in incremented and another cycle started, this cycle repeats until the required amount of data is stored in the buffer and acquisition halted.
-##### The ./definitions file, shown below, makes setting up the 32 bit mask, trigger_mask and trigger_value vectors very simple. The file logic.vhdl assigns fpga std_logic values to the logic_data(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16kb logic buffer when (mask & logic_data) changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and (triggermask & logic_data) = trigger_value. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
+##### There are three user set 32 bit vectors that are used to sample and trigger the collection data. The data bits availble to the logic analyzer are placed in the logic_vector word defined in logic.vhdl. logic_mask determins which of the signals in logic_vector are examined for change of state, if the state has changed compared to the last sampling clock then logic_vector is stored in onboard sram. The trigger operates according to the condition that:
+```vhdl
+    if (triggered = '0' and                             --not triggered yet this cycle
+       logic_write_addr > trigger_offset and            --greater than trigger offset
+       (logic_data and logic_trig0) = logic_trig1) then --mask data equal to trigger value
+           triggered <= '1';
+           triggered_addr <= logic_write_addr + '1';
+    end if;
 ```
-    #definition file for logic.c analyzer
-    #leading sharp is comment
-    #column 1 is name you want on plot
-    #column 2 is lsb of  packet data to plot
-    #column 3 is width of vector assigned to name
-    #column 4 is trigger value 
-    #    - neg value will not contribute to trigger
-    #    - each >= 0 value will contribute to trig word
-    #    - trig generated on first occurrence of trig word
-
-
-    #str1u     13   1    -1
-    #cnt1u      4   8    45 
-    
-    pwm3        3   1    -1
-    pwm2        2   1    -1
-    pwm1        1   1    -1
-    pwm0        0   1    -1
-    pwm         1   3     4
-```
+##### Notice that the data stored in the buffer is for each sample of data, the time of this event is also stored in the buffer. The user specifies a number of samples to stroe and display, the draphing tool converts this to x axis time for the display.
 ##### After the acqisition has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
 ### 5.2 Logic Analyzer Packet and Payload Format
 #### Logic Analyzer Serial Packet Description   
@@ -357,7 +345,29 @@ int main(int argc, char **argv) {
 ```
 
 ## 10. Logic Analyzer Demonstration
-##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped registers are displayed, a status line appears summarizing the acquisition state. 
+##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped registers are displayed, a status line appears summarizing the acquisition state.
+##### The ./definitions file, shown below, makes setting up the 32 bit mask, trigger_mask and trigger_value vectors very simple. The file logic.vhdl assigns fpga std_logic values to the logic_data(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16kb logic buffer when (mask & logic_data) changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and (triggermask & logic_data) = trigger_value. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
+```
+    #definition file for logic.c analyzer
+    #leading sharp is comment
+    #column 1 is name you want on plot
+    #column 2 is lsb of  packet data to plot
+    #column 3 is width of vector assigned to name
+    #column 4 is trigger value 
+    #    - neg value will not contribute to trigger
+    #    - each >= 0 value will contribute to trig word
+    #    - trig generated on first occurrence of trig word
+
+
+    #str1u     13   1    -1
+    #cnt1u      4   8    45 
+    
+    pwm3        3   1    -1
+    pwm2        2   1    -1
+    pwm1        1   1    -1
+    pwm0        0   1    -1
+    pwm         1   3     4
+```
 ![Logic Analyzer trace](./output.png)
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 11. Setting up Altera Quartus Software
