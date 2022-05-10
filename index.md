@@ -362,11 +362,9 @@ int main(int argc, char **argv) {
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 11. Setting up Altera Quartus Software
 ##### Search and download Intel Quartus Prime Lite Edition Design Software, my machine is running ubuntu and using version 21.1. Extract software and `install.sh`. Give your self permissions for a serial port if necessary.
-##### From a terminal go to directory where you want cyc1000-drone project installed and install git. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
+##### From a terminal go to directory where you want testbench project installed. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
 ```
 git clone -r https://github.com/baetis-ma/max1000-oscope.git
-As a short cut to get the quartus gui running -
-~/intelFPGA_lite/21.1/quartus/bin/quartus --64bit top.qpf 
 ```
 ##### Starting a project and getting things going with the gui has its uses, but it is also possible to edit files and program the device directly with your own IDE with a few simple commands.
  ```
@@ -375,7 +373,7 @@ quartus_sh --flow compile oscope                                                
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.sof"  (program fpga sram)
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
-##### The file command in the base directory has several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add to project.
+##### Typing `cat command` in the project directory shows several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add files to project without having to go into the project planner in the gui.
 
 
 ## 12. Concluding Remarks
