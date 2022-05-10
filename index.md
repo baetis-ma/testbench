@@ -111,7 +111,7 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'\n");
 set output 'output.png'
 replot
 ```
-##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and  to determine if a command has been entered, if either is true the data is processed or the input command processed. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on the terminal.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and determining if a command has been entered, if either is true the data is processed or the input command processed. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on the terminal.
 ##### The read packet subroutine is shown below, once called the program sits in a loop reading bytes from the serial port until the last six characters received are 'oscope'. The rest of the packet is read in as a chunk and sorted out into the rest of the contents of the header and then the payload moved into the volt array.
 ```C
 //sync and read packet
@@ -133,9 +133,9 @@ int readpacket()
       if((ret = strcmp("oscope", syncword)) == 0) syncpat = 1;
    }
    
-   //chomps whole packet after syncword
+   //chomps rest of header after syncword
    tot = 0;
-   while(tot < length+11) {
+   while(tot < 24) {
       tot = tot + read(fd, packetdata + tot, length+11-tot);
    }
 
@@ -148,15 +148,21 @@ int readpacket()
    timeus   = 256 * packetdata[3] + packetdata[4];
    trigoff  = 256 * packetdata[5] + packetdata[6];
    
+   //chomps rest of packet - data payload
+   tot = 0;
+   while(tot < length) {
+      tot = tot + read(fd, packetdata + tot, length-tot);
+   }
+   
    //read payload part of packet into volt array
-   vecnum = 11;   //offset from residual header
+   vecnum = 0;
    while(vecnum < length/2){
       volt[vecnum] = 256 * packetdata[2*vecnum+1] + packetdata[2*vecnum];
       vecnum++;
    }
 }
 ```
-##### The mkgnuplotprg() subroutine take the conyrnys of the volt array and assembles the gnuplot commands to program the oscilloscope display. The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
+##### The mkgnuplotprg() subroutine take the contents of the volt array and assembles the gnuplot commands to program the oscilloscope display. The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
 ## 4. Oscilloscope Demonstration
 ##### To start the program enter `./oscope0 | gnuplot`. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. Commands can be entered as a command string, if the command string is recognized and the parameters valid the command will be applied. If the command was not recognized the first char of the string will be examined as the menu shows, in which case the user will be prompted for input.
 ```
