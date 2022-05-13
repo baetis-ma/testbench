@@ -1,10 +1,10 @@
 # Abstract
-<img align="right" width="45%" height="30%" src="testbenchboard.jpg"></img>
-##### A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second shared between up to four channels, and about 2 dozen digital signals sampled digitally at a 200MHz. The FPGA collects and buffers the analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop or Desktop computer receives this packet at 500Kbaud and converts packet to a gnuplot program which is piped to gnuplot. Gnuplot display updates up to six times per second are consistent on my 10yo machine. Both the analog and digital have a number of triggering options available. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated. 
+##### A pretty good combination oscilloscope and logic analyzer is described able to sample up to 1M analog samples/second shared between up to four channels, and about 2 dozen digital signals sampled digitally at a 200MHz. The FPGA collects and buffers the analog and digital measurements, when the user specified number of samples are reached a packet is forwarded over a serial uart over usb connection. A Laptop+ or Desktop computer receives this packet at 500Kbaud and converts packet to gnuplot commands which are piped to gnuplot. Gnuplot display updates up to six times per second are consistent on my 10yo machine. Both the analog and digital have a number of triggering options available. A user interface for realtime modifications of timebase, collected samples, trigger options is integrated. 
+![picture](testbenchboard.jpg)
 ## 1. Theory of Operation
 ##### The Oscilloscope function of the FPGA operates by generating a user programmable update_strobe, adjustable in the range 0.1sec to several minutes, this signal initiates the acquisition of ADC samples into on board buffer memory. The samples are round-robined through the active channels at a user selectable rate (multiples of 1usec). This sequence ends when the user selected number of samples per channel times the number of channels offset by any trigger delay is reached and the ADC is halted. Ihe buffer at this point has a full trace (#samples x samplerate) of valid ADC data for each active channel, the output state machine is activated which generates a packet forwarded to the uart for transmission. 
 ##### The Logic Analyzer function is resident in the FPGA and the user can switch between the two modes. The same user programmable update_strobe signal initiates the acquisition of logic samples into on board buffer memory. The samples are collected whenever any of the defined logic levels change state. This sequence ends when the user selected number of samples offset by any trigger offset. At this point the buffer has a full set of samples collected, the output state machine is activated which generates a packet forwarded to the uart for transmission.
-## 2. Oscilloscope Firmware
+## 2. Firmware
 ### 2.1 Top Level Functionality
 ##### *logic.vhdl* provides interconnectivity for the system component pieces, adcstream.vhdl, logicstream.vhdl, testinterface.vhdl and adc_qsys.qsys. It also provides a system level memory map of user accessible registers, various system timers and strobes are setup.
 ### 2.2 Serial Interface 
@@ -38,12 +38,12 @@ oscope��E����������������%��%��%��
 ```
 ##### To peek and poke the internal fpga registers, first press switch1 on the fpga board once – this will stop the packet being transmitted on the uart serial port. Then run `picocom -r -b 500000 -c`. The monitor will be ready to accept commands to read and write the fpga’s internal mapped registers. There are only two commands: 1) ‘r’ followed by two hex digits – example `r 00` will read register 0x00 and write it to monitor, 2)’w’ followed by two hex digits of address and then four digits of data – example `w 00 1234` will write 0x1234 into address 0x10 of the fpga register space.
 ##### In operation the uart serial port is connected to a program running on a lap/desktop computer that converts the packet data into a gnuplot program. The software is further described below. 
-### 2.3 Oscilloscope Data Collection and Management
+## 3. Oscilloscope Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input voltage measurement results and generates an output packet (described in next section) to the uart serial output.
 ##### At a rate determined by the user, a cycle is started to acquire data from the on board analog to digital converter. A channel number is loaded into the ADC control register and an acquisition cycle started, when the ADC has completed the data is read, formatted and stored into on board sram. The address of the sram in incremented, a new channel number loaded into ADC control and after a programmed delay (selecable by user – samplerate) another cycle started. The channel numbers are a round robin of the active channels. This cycle repeats until the required amount of data is stored in the buffer and the ADC halted. For the case of no trigger the ADC will be halted once the user selected number of samples are collected for each channel.
 ##### When a trigger is specified the ADC acquisition cycle will continue so that a full number of display samples are stored after triggering. The trigger currently implemented activates when the incoming measurements on the selected channel over the last four cycles are <50%fs, <50%fs, >=50%fs and >=50%fs (or the opposite for negative edge trigger selected), the trigger can be chosen to operate on each of the active channels positive or negative edge. Data is stored so that a full compliment of samples after the trigger are collected. The trigger offset can be greater than the number of samples (or even negative) within the constraints of the 8K sample buffer.
 ##### After the ADC has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
-### 2.4 Oscilloscope Packet and Payload Format
+## 4. Oscilloscope Packet and Payload Format
 #### Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
@@ -72,7 +72,7 @@ oscope��E����������������%��%��%��
 |LSB|    1  |  data(6) |  data(5) |  data(4) |  data(3) |  data(2) |  data(1) |  data(0) |
 |---|-------|----------|----------|----------|----------|----------|----------|----------|
 ```
-## 3. Oscilloscope Software
+## 5. Oscilloscope Software
 ##### The software sets up a connection to the oscilloscope uart output through a usb cable. As the data streams in the program synchronizes to the ‘oscope’ portion of the header and reads the rest of the header. The data payload portion of the packet is parsed into voltage measurements for the each of the active channels. For each packet a gnuplot command is sent to stdout, as an example – for two channels sampled 500x at 2usec as in the printout below.
 ```gnuplot
 #!/usr/bin/gnuplot -p
@@ -111,7 +111,7 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'\n");
 set output 'output.png'
 replot
 ```
-##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and determining if a command has been entered, if either is true the data is processed or the input command processed. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on the terminal.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer contents and  to determine if a command has been entered, if either is true the data is processed or the input command processed. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on the terminal.
 ##### The read packet subroutine is shown below, once called the program sits in a loop reading bytes from the serial port until the last six characters received are 'oscope'. The rest of the packet is read in as a chunk and sorted out into the rest of the contents of the header and then the payload moved into the volt array.
 ```C
 //sync and read packet
@@ -133,9 +133,9 @@ int readpacket()
       if((ret = strcmp("oscope", syncword)) == 0) syncpat = 1;
    }
    
-   //chomps rest of header after syncword
+   //chomps whole packet after syncword
    tot = 0;
-   while(tot < 24) {
+   while(tot < length+11) {
       tot = tot + read(fd, packetdata + tot, length+11-tot);
    }
 
@@ -148,22 +148,16 @@ int readpacket()
    timeus   = 256 * packetdata[3] + packetdata[4];
    trigoff  = 256 * packetdata[5] + packetdata[6];
    
-   //chomps rest of packet - data payload
-   tot = 0;
-   while(tot < length) {
-      tot = tot + read(fd, packetdata + tot, length-tot);
-   }
-   
    //read payload part of packet into volt array
-   vecnum = 0;
+   vecnum = 11;   //offset from residual header
    while(vecnum < length/2){
       volt[vecnum] = 256 * packetdata[2*vecnum+1] + packetdata[2*vecnum];
       vecnum++;
    }
 }
 ```
-##### The mkgnuplotprg() subroutine take the contents of the volt array and assembles the gnuplot commands to program the oscilloscope display. The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
-## 4. Oscilloscope Demonstration
+##### The mkgnuplotprg() subroutine take the conyrnys of the volt array and assembles the gnuplot commands to program the oscilloscope display. The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
+## 6. Oscilloscope Demonstration
 ##### To start the program enter `./oscope0 | gnuplot`. For a full list of commands available type h, a list of commands shows on the screen below. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. Commands can be entered as a command string, if the command string is recognized and the parameters valid the command will be applied. If the command was not recognized the first char of the string will be examined as the menu shows, in which case the user will be prompted for input.
 ```
 --> ./oscope | gnuplot
@@ -192,22 +186,38 @@ h - this message
 ![nrf24l01](nrf-oscope.png)
 
 ![nrf24l01](nrf1.png) 
-## 5. Logic Analyzer Firmware
-### 5.1 Logic Analyzer Data Collection and Management
+
+
+
+
+
+## 7. Logic Analyzer Data Collection and Management
 ##### *adcstream.vhdl* controls the collection of input state results and generates an output packet to the uart serial output.
 ##### At an update rate determined by the user, a cycle is started to acquire data from the on board digital signals. If any of the umasked signals change state 27 bits of data are stored in sram along with a timestamp (number of clocks since acq start). The address of the sram in incremented and another cycle started, this cycle repeats until the required amount of data is stored in the buffer and acquisition halted.
-##### There are three user set 32 bit vectors that are used to sample and trigger the collection data. The data bits availble to the logic analyzer are placed in the logic_vector word defined in logic.vhdl. logic_mask determins which of the signals in logic_vector are examined for change of state, if the state has changed compared to the last sampling clock then logic_vector is stored in onboard sram. The trigger operates according to the condition that:
-```vhdl
-    if (triggered = '0' and                             --not triggered yet this cycle
-       logic_write_addr > trigger_offset and            --greater than trigger offset
-       (logic_data and logic_trig0) = logic_trig1) then --mask data equal to trigger value
-           triggered <= '1';
-           triggered_addr <= logic_write_addr + '1';
-    end if;
+##### The ./definitions file, shown below, makes setting up the 32 bit mask, trigger_mask and trigger_value vectors very simple. The file logic.vhdl assigns fpga std_logic values to the logic_data(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16kb logic buffer when (mask & logic_data) changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and (triggermask & logic_data) = trigger_value. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
 ```
-##### Notice that the data stored in the buffer is for each sample of data, the time of this event is also stored in the buffer. The user specifies a number of samples to stroe and display, the draphing tool converts this to x axis time for the display.
+    #definition file for logic.c analyzer
+    #leading sharp is comment
+    #column 1 is name you want on plot
+    #column 2 is lsb of  packet data to plot
+    #column 3 is width of vector assigned to name
+    #column 4 is trigger value 
+    #    - neg value will not contribute to trigger
+    #    - each >= 0 value will contribute to trig word
+    #    - trig generated on first occurrence of trig word
+
+
+    #str1u     13   1    -1
+    #cnt1u      4   8    45 
+    
+    pwm3        3   1    -1
+    pwm2        2   1    -1
+    pwm1        1   1    -1
+    pwm0        0   1    -1
+    pwm         1   3     4
+```
 ##### After the acqisition has been halted a signal is sent to activate the output state machine. First a header is generated, then the buffer data is dumped at an offset address equal to the buffer address where the trigger occurred minus the user selectable trigger offset.
-### 5.2 Logic Analyzer Packet and Payload Format
+## 8. Logic Analyzer Packet and Payload Format
 #### Logic Analyzer Serial Packet Description   
 ```
 |------------------|---------------|------------------------------------------------ |
@@ -239,7 +249,7 @@ h - this message
 |   0 |  vector(6) |  vector(5) |  vector(4) |  vector(3) |  vector(2) |  vector(1) |  vector(0) |
 |-----|------------|------------|------------|------------|------------|------------|------------|
 ```
-## 6. Logic Analyzer Software 
+## 9. Logic Analyzer Software 
 ##### The software sets up a connection to the logic uart output through a usb cable. As the data streams in the program synchronizes to the ‘logical’ portion of the header and reads the rest of the header. The data payload portion of the packet is parsed into voltage measurements for the each of the active channels. For each packet a gnuplot program file is sent to stdout, as an example this is this is display to forty transitions after trigger on bus named pwm with value 0x4.
 
 ```gnuplot
@@ -308,13 +318,14 @@ set terminal png size 1200, 400 background rgb 'dark-olivegreen'
 set output 'output.png'
 replot
 ```
-##### The program uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handeling these requests. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on screen.
+##### The program that was written happens to be in C. It uses stdout to output the gnuplot commands and stderr to write to the terminal. The program alternates between checking for uart rx buffer content, check time stamp on ./definitions file running select on stdin to determine if a command has been entered and handeling these requests. Executing `./oscope | gnuplot` will result in gnuplot display of the oscilloscope output, executing `./oscope` command will result in the gnuplot commands being displayed on screen.
 ##### The code segment below is the main loop from logic.c. First it sets up some variables, then it starts serial port with a serial oprn subroutine. It enters the main loop :  
 - if timestamp on ./definitions has changed since last read run rerundef() to assemble mask and trigger vectors
 - if string entered from terminal stdin process string and update variable with menu() 
 - if neither of these run readpacket() which will look for sync work and then read and disassemble packet
 - after reading packet run mkgnuplotprog() to generate gnuplot program file.
 - back to beginning of loop
+
 ```C
 int main(int argc, char **argv) {
    char buff[64];
@@ -349,38 +360,21 @@ int main(int argc, char **argv) {
    }
 }
 ```
-
 ## 10. Logic Analyzer Demonstration
-##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped registers are displayed, a status line appears summarizing the acquisition state.
-##### The ./definitions file, shown below, makes setting up the 32 bit mask, trigger_mask and trigger_value vectors very simple. The file logic.vhdl assigns fpga std_logic values to the logic_data(31 downto 0) vector. This vector along with the contents of count_200mhz are stored in the 16kb logic buffer when (mask & logic_data) changes from the last sampling cycle (5nsec ago). The trace is triggered once new data is being stored and (triggermask & logic_data) = trigger_value. With the logic anzlyzer active the ./definitions file can be edited, when the new file is saved it will be applied to the fpga on the next cycle.
-```
-    #definition file for logic.c analyzer
-    #leading sharp is comment
-    #column 1 is name you want on plot
-    #column 2 is lsb of  packet data to plot
-    #column 3 is width of vector assigned to name
-    #column 4 is trigger value 
-    #    - neg value will not contribute to trigger
-    #    - each >= 0 value will contribute to trig word
-    #    - trig generated on first occurrence of trig word
-
-
-    #str1u     13   1    -1
-    #cnt1u      4   8    45 
-    
-    pwm3        3   1    -1
-    pwm2        2   1    -1
-    pwm1        1   1    -1
-    pwm0        0   1    -1
-    pwm         1   3     4
-```
+##### To start the program enter ./oscope0 | gnuplot, as the screen shot embedded shows. For a full list of commands available type h, a list of commands shows on the screen. Most of these commands do not need much explanation, y toggles adding 4 volt offsets to each channel, u changes oscope display update rate. A example is shown of changing the timebase. Once the request timebase is entered the contents of the affected fpfa mapped registers are displayed, a status line appears summarizing the acquisition state. 
 ![Logic Analyzer trace](./output.png)
 ##### The software indicates trigger sample with a red ‘\*’ on the time axis, in the case of triggers outside of the plot arrows are shown pointing in the direction of the trigger point. The trigger is offset from the start of trace by a user defined trigger offset.
+
+
+
+
 ## 11. Setting up Altera Quartus Software
 ##### Search and download Intel Quartus Prime Lite Edition Design Software, my machine is running ubuntu and using version 21.1. Extract software and `install.sh`. Give your self permissions for a serial port if necessary.
-##### From a terminal go to directory where you want testbench project installed. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
+##### From a terminal go to directory where you want cyc1000-drone project installed and install git. The git project contains just those files necessary to be able to compile the firmware to generate both sram and prom fpga images. To download project directory enter the following command. 
 ```
 git clone -r https://github.com/baetis-ma/max1000-oscope.git
+As a short cut to get the quartus gui running -
+~/intelFPGA_lite/21.1/quartus/bin/quartus --64bit top.qpf 
 ```
 ##### Starting a project and getting things going with the gui has its uses, but it is also possible to edit files and program the device directly with your own IDE with a few simple commands.
  ```
@@ -389,9 +383,7 @@ quartus_sh --flow compile oscope                                                
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.sof"  (program fpga sram)
 quartus_pgm -m jtag -o "p;/home/mark/Desktop/max1000-oscope/output_files/oscope.pof"  (program fpga eprom)
 ```
-##### Typing `cat command` in the project directory shows several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add files to project without having to go into the project planner in the gui.
-
-
+##### The file command in the base directory has several other useful commands. The logic.qsf file can be used to add pin hookups and configuration and add to project.
 ## 12. Concluding Remarks
 ##### This board make a very functional test bench that is very easy to use. To use the board it is plugged into a usb port (which supplies power) and either the `./oscope | gnuplot` or './logic | gnuplot` program launched in a terminal. While the gnuplot screen is updating with new traces several times a second the user can modify timebase, number of samples, triggering and display fine tuning commands from the terminal in realtime.
 ##### The MAX1000 boards are available for about forty dollars. The programming code is free to download and use.
